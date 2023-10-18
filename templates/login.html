@@ -1,0 +1,126 @@
+{% extends "layout.html" %}
+{% load static %}
+{% block head %}
+    <style>
+        main {
+            width: 100%;
+            height: 100%;
+        }
+        .title {
+            display: block;
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-size: 2rem;
+            margin-bottom: 2rem;
+        }
+        #video-container {
+            display: block;
+            margin: 0 auto;
+            width: 720px;
+        }
+        video {
+            display: block;
+            border: 2px solid #E51D1D;
+            border-radius: 5px;
+        }
+        .corner{
+            width: 60px;
+            height: 60px;
+            position: absolute;
+            filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.25));
+        }
+        .top-left-corner{
+            margin-top: 20px;
+            margin-left: 20px;
+        }
+        .top-right-corner{
+            margin-top: 20px;
+            margin-left: calc(720px - 20px - 60px);
+            transform: rotate(90deg);
+        }
+        .bottom-left-corner{
+            margin-left: 20px;
+            transform: translateY(-80px) rotate(-90deg); 
+        }
+        .bottom-right-corner{
+            margin-left: calc(720px - 20px - 60px);
+            transform: translateY(-80px) rotate(180deg);
+        }
+        #result{
+            position: relative;
+            font-size: 2rem;
+            text-align: center;
+        }
+    </style>
+{% endblock %}
+{% block body %}
+<main id="login">
+    <div class="title">Đưa mặt vào khung hình</div>
+    <div id="video-container">
+        <img class="top-left-corner corner" src="{% static '/corner.svg' %}" alt="svg">
+        <img class="top-right-corner corner" src="{% static '/corner.svg' %}" alt="svg">
+        <video id="video" muted autoplay playsinline width="720px" height="540px"></video>
+        <img class="bottom-left-corner corner" src="{% static '/corner.svg' %}" alt="svg">
+        <img class="bottom-right-corner corner" src="{% static '/corner.svg' %}" alt="svg">
+        <div id="result"></div>
+    </div>
+</main>
+<script src="{% static '/jquery.min.js' %}"></script>
+<script type="text/javascript">
+    const video = document.getElementById('video');
+    const constraints = {
+        audio: false,
+        video: {
+            facingMode: "user"
+        }
+    };
+    const canvas = document.createElement('canvas');
+    canvas.width = video.width;
+    canvas.height = video.height;
+    navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
+        video.srcObject = stream;
+    });
+
+    function capture(){
+        return new Promise((resolve, reject) => {
+            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+            canvas.toBlob((blob) => {
+                const image = new File([blob], 'image');
+                resolve(image);
+            })
+        })
+    }
+    async function verify(image){
+        const formData = new FormData();
+        formData.append('image', image);
+        return new Promise((resolve, reject) => {
+            fetch("/api/verify/", {
+                method: "POST",
+                body: formData,
+            }).then(res => res.json())
+            .then(data => resolve(data.success))
+            .catch((e) => reject(e));
+        })
+    }
+    async function sleep(time){
+        return new Promise((resolve) => {
+            setTimeout(() => {resolve()}, time);
+        })
+    }
+    async function main () {
+        const result = $('#result');
+        await sleep(3000);
+        const image = await capture();
+        const isVerify = await verify(image);
+        if(isVerify){
+            result.css('color', 'rgb(118, 245, 118)');
+            result.text("Thành công");
+        }else{
+            result.text("Thất bại");
+            result.css('color', 'red');
+        }
+    }
+    main();
+</script>
+{% endblock %}
