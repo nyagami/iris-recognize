@@ -19,7 +19,7 @@ def verify(request: HttpRequest):
         with open(os.path.join(settings.MEDIA_ROOT, file_name), 'wb') as f:
             f.write(base64)
         # send request to other server
-        isVerify = True
+        isVerify = False
         if isVerify:
             return HttpResponse(json.dumps({'success': True}), content_type='application/json')
         else:
