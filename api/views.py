@@ -3,6 +3,7 @@ import requests
 from django.http import HttpResponse, HttpRequest, HttpResponseBadRequest, HttpResponseForbidden
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
+from django.forms import model_to_dict
 
 from login.models import User, LoginHistory
 
@@ -42,10 +43,11 @@ def verify(request: HttpRequest):
             new_login.modelId = data['model_id']
             new_login.status = 'success'
             new_login.save()
+
             return HttpResponse(json.dumps({'success': True}), content_type='application/json')
         else:
             os.remove(file_path)
-            return HttpResponse(json.dumps({'success': False}), content_type='application/json')
+            return HttpResponse(json.dumps({'success': False, 'user': model_to_dict(verified_user)}), content_type='application/json')
     return HttpResponseBadRequest()
 
 def get_all_users(request):
