@@ -35,19 +35,37 @@ def verify(request: HttpRequest):
         except Exception as e:
             print(e)
         print(data)
-        if data.get('verify'):
-            user_id = data["user_id"]
-            verified_user = User.objects.first(id=user_id)
-            new_login = LoginHistory.objects.create(user=verified_user)
-            new_login.imageUrl = settings.MEDIA_URL + file_name
-            new_login.modelId = data['model_id']
-            new_login.status = 'success'
-            new_login.save()
+        
+        ####
+        data['verify'] = True
+        data['user_id'] = None
+        data['model_id'] = 5
+        ####
 
-            return HttpResponse(json.dumps({'success': True}), content_type='application/json')
+        if data.get('verify'):
+            user_id = data.get("user_id")
+            try:
+                verified_user = User.objects.get(id=user_id)
+                new_login = LoginHistory.objects.create(
+                    user=verified_user, 
+                    modelId=data.get('model_id'), 
+                    imageUrl=settings.MEDIA_URL + file_name,
+                    status='success'
+                )
+                new_login.save()
+                user = {
+                    'id': verified_user.pk,
+                    'fullName': verified_user.fullName,
+                    'room': verified_user.room,
+                    'role': verified_user.role
+                }
+            except:
+                verified_user = None
+                user = None
+            return HttpResponse(json.dumps({'success': True if user else False, 'user': user}), content_type='application/json')
         else:
             os.remove(file_path)
-            return HttpResponse(json.dumps({'success': False, 'user': model_to_dict(verified_user)}), content_type='application/json')
+            return HttpResponse(json.dumps({'success': False}), content_type='application/json')
     return HttpResponseBadRequest()
 
 def get_all_users(request):

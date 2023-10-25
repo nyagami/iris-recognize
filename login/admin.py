@@ -5,7 +5,10 @@ from django.contrib import admin
 from .models import User, LoginHistory
 
 class UserAdmin(admin.ModelAdmin):
-    list_display = ['fullName']
+    list_display = ['id', 'fullName', 'role']
+
+class LoginHistoryAdmin(admin.ModelAdmin):
+    list_display = ['id', 'status', 'time']
 
 admin.site.register(User, UserAdmin)
-admin.site.register(LoginHistory)
+admin.site.register(LoginHistory, LoginHistoryAdmin)
