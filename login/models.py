@@ -16,7 +16,7 @@ class User(models.Model):
 
 class LoginHistory(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    time = models.DateTimeField("logined time")
+    time = models.DateTimeField("logined time", auto_now_add=True)
     status = models.CharField(max_length=255)
     imageUrl = models.CharField(max_length=255)
     modelId = models.IntegerField()
